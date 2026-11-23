@@ -1,0 +1,16 @@
+Tanks environment and surface assets
+
+Misty Pines HDRI (2K) — Greg Zaal, Poly Haven
+https://polyhaven.com/a/misty_pines
+https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/misty_pines_2k.hdr
+
+Wood Planks Grey (1K color, OpenGL normal, roughness) — Rob Tuytel, Poly Haven
+https://polyhaven.com/a/wood_planks_grey
+https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/wood_planks_grey/
+
+These photographed assets are CC0 (public domain).
+https://polyhaven.com/license
+
+All fish, dock, rope, float, net and water geometry, animation and simulation
+are constructed procedurally in the Tanks source. No external models or runtime
+asset servers are required. Assets are served from this website.

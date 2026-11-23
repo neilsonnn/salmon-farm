@@ -1,0 +1,12 @@
+.tanks-debug { position: fixed; z-index: 4; right: max(12px, env(safe-area-inset-right)); bottom: max(10px, env(safe-area-inset-bottom)); font-size: 12px; line-height: 1.5; }
+.tanks-debug > summary { width: fit-content; margin-left: auto; padding: 8px; list-style: none; cursor: pointer; opacity: 0.5; }
+.tanks-debug > summary::-webkit-details-marker { display: none; }
+.tanks-debug > summary:hover, .tanks-debug[open] > summary { opacity: 1; }
+.tanks-debug-panel { position: absolute; right: 0; bottom: 40px; width: min(310px, calc(100vw - 24px)); padding: 16px; background: #142019ed; border: 1px solid #ece9e226; border-radius: 3px; }
+.tanks-debug-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+.tanks-debug button { padding: 6px 8px; background: none; color: inherit; font: inherit; border: 1px solid #ece9e233; border-radius: 2px; cursor: pointer; }
+.tanks-debug button:hover { border-color: #ece9e299; }
+.tanks-debug label { display: flex; justify-content: space-between; margin-top: 20px; }
+.tanks-debug input { width: 100%; margin: 10px 0 20px; accent-color: #c5caa2; }
+.tanks-debug p { margin: 12px 0 0; color: #b8c2af; }
+.tanks-debug p:empty { display: none; }
