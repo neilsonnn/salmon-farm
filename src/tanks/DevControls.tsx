@@ -21,7 +21,7 @@ export default function DevControls({ sceneRef, paused, setPaused, murk, setMurk
     if (!scene) return
     try {
       setStatus('Saving…')
-      const data = kind === 'opening' ? scene.captureFrame(2880, 960) : scene.captureFrame(1200, 675)
+      const data = kind === 'opening' ? scene.captureFrame(2880, 960) : scene.captureFrame(2560, 1440)
       const image = await (await fetch(data)).blob()
       const result = await fetch(`/__capture/${kind}`, { method: 'POST', headers: { 'Content-Type': 'image/webp' }, body: image })
       if (!result.ok) throw new Error(await result.text())
