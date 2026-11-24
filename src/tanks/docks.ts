@@ -21,7 +21,7 @@ const NET_VERTEX = /* glsl */ `
     vec3 p = position;
     if (uCover > 0.5) {
       float sag = sin(uv.x * 3.14159265) * sin(uv.y * 3.14159265);
-      p.y -= sag * 0.16;
+      p.y -= sag * 0.055;
       p.y += sin(p.x * 0.6 + p.z * 0.7 + uTime * 0.7) * 0.007 * sag;
     } else {
       p.z += sin(uv.x * 7.0 + uTime * 0.28) * sin(uv.y * 3.14159265) * 0.05;
@@ -72,7 +72,9 @@ export function createNets() {
     const topGeometry = new PlaneGeometry(width, length, 24, 32)
     topGeometry.rotateX(-Math.PI / 2)
     const cover = new Mesh(topGeometry, makeMaterial(width, length, true))
-    cover.position.set(pen.x, 0.075, pen.z)
+    // Keep the full cover above the wave crests, including its sag and flutter.
+    // A submerged center is occluded by the opaque water and looks like a hole.
+    cover.position.set(pen.x, 0.12, pen.z)
     cover.renderOrder = 3
     group.add(cover)
     const depth = 3.0
