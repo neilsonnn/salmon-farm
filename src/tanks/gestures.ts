@@ -1,43 +1,10 @@
 import { MathUtils, Quaternion, Spherical, Vector3 } from 'three'
 import type { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 
-interface WheelSample {
-  deltaMode: number
-  deltaX: number
-  deltaY: number
-  ctrlKey: boolean
-  timeStamp: number
-  wheelDeltaY?: number
-}
-
-/** Browsers expose scroll units/deltas, not a reliable physical-device identifier. */
-class WheelIntent {
-  private intent: 'orbit' | 'zoom' | null = null
-  private lastTime = -Infinity
-
-  classify(event: WheelSample) {
-    // Read the unit before the deltas: some browsers change their interpretation on access.
-    const mode = event.deltaMode
-    if (event.ctrlKey || mode !== 0) { this.reset(); return 'zoom' }
-    if (event.timeStamp - this.lastTime > 250 || event.timeStamp < this.lastTime) this.intent = null
-    this.lastTime = event.timeStamp
-    if (this.intent) return this.intent
-    const { deltaX, deltaY, wheelDeltaY } = event
-    const notch = wheelDeltaY !== undefined && Math.abs(wheelDeltaY) >= 120
-      && Math.abs(wheelDeltaY) % 120 === 0
-    const continuous = deltaX !== 0 || (!notch && (!Number.isInteger(deltaY) || Math.abs(deltaY) < 50))
-    this.intent = continuous ? 'orbit' : 'zoom'
-    return this.intent
-  }
-
-  reset() { this.intent = null; this.lastTime = -Infinity }
-}
-
 interface NativeGesture extends Event { scale: number }
 
-/** Trackpad orbit augments OrbitControls; its mouse, wheel zoom and touch controls remain native. */
+/** Add Shift-scroll orbit and Safari pinch support to OrbitControls. */
 export class SceneGestures {
-  private readonly wheelIntent = new WheelIntent()
   private readonly offset = new Vector3()
   private readonly spherical = new Spherical()
   private readonly upToY = new Quaternion()
@@ -68,19 +35,23 @@ export class SceneGestures {
     if (!this.controls.enabled) return
     if (event.ctrlKey) {
       this.clearOrbit()
-      this.wheelIntent.reset()
       // A browser may emit both native gesture events and ctrl-wheel for one pinch.
       if ((this.nativeScale !== null && !this.nativeUsesWheel) || event.timeStamp <= this.suppressWheelPinchUntil) {
         this.consume(event); return
       }
       this.lastWheelPinch = event.timeStamp
+      return
     }
-    if (this.wheelIntent.classify(event) === 'zoom') { this.clearOrbit(); return }
+    // Browsers use the same wheel event for trackpads and smooth mouse wheels.
+    if (!event.shiftKey) { this.clearOrbit(); return }
     this.consume(event)
     if (!this.controls.enableRotate) return
-    const radiansPerPixel = 2 * Math.PI * this.controls.rotateSpeed / Math.max(1, this.element.clientHeight)
-    this.pendingTheta -= event.deltaX * radiansPerPixel
-    this.pendingPhi -= event.deltaY * radiansPerPixel
+    const height = Math.max(1, this.element.clientHeight)
+    const mode = event.deltaMode
+    const pixelsPerUnit = mode === 1 ? 16 : mode === 2 ? height : 1
+    const radiansPerUnit = 2 * Math.PI * this.controls.rotateSpeed * pixelsPerUnit / height
+    this.pendingTheta -= event.deltaX * radiansPerUnit
+    this.pendingPhi -= event.deltaY * radiansPerUnit
   }
 
   private onPointerDown = (event: PointerEvent) => {
@@ -108,7 +79,6 @@ export class SceneGestures {
     this.nativeScale = scale
     if (this.nativeUsesWheel || scale === previous) return
     this.clearOrbit()
-    this.wheelIntent.reset()
     const camera = this.controls.object
     this.offset.copy(camera.position).sub(this.controls.target)
     const distance = this.offset.length()
@@ -145,7 +115,7 @@ export class SceneGestures {
   }
 
   reset() {
-    this.clearOrbit(); this.wheelIntent.reset(); this.touches.clear()
+    this.clearOrbit(); this.touches.clear()
     this.nativeScale = null; this.nativeUsesWheel = false
     this.lastWheelPinch = -Infinity; this.suppressWheelPinchUntil = -Infinity
   }

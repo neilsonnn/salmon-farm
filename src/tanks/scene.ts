@@ -105,12 +105,12 @@ export class TanksScene {
     this.controls.enableDamping = true
     this.controls.dampingFactor = 0.065
     this.controls.enablePan = false
-    this.controls.minDistance = 6.1
+    this.controls.minDistance = 3.5
     this.controls.maxDistance = 20
     this.controls.minPolarAngle = 0.22
     this.controls.maxPolarAngle = 1.03
     this.controls.rotateSpeed = 0.35
-    this.controls.zoomSpeed = 0.65
+    this.controls.zoomSpeed = 1
     this.controls.update()
     this.controls.saveState()
     this.gestures = new SceneGestures(this.controls, this.renderer.domElement)

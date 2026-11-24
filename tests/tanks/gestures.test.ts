@@ -37,7 +37,7 @@ function rig() {
     element.dispatchEvent(event)
     return event
   }
-  const wheel = (values: Record<string, unknown> = {}) => send('wheel', { deltaMode: 0, deltaX: 0, deltaY: 0, ctrlKey: false, clientX: 400, clientY: 300, ...values })
+  const wheel = (values: Record<string, unknown> = {}) => send('wheel', { deltaMode: 0, deltaX: 0, deltaY: 0, ctrlKey: false, shiftKey: false, clientX: 400, clientY: 300, ...values })
   const step = (frames = 60, dt = 1 / 60) => {
     for (let i = 0; i < frames; i++) { gestures.update(dt); controls.update() }
   }
@@ -45,21 +45,21 @@ function rig() {
 }
 
 describe('Trackpad, pinch and mouse-wheel controls', () => {
-  it('orbits both axes on a two-finger scroll without changing camera distance', () => {
+  it('orbits both axes on Shift-scroll without changing camera distance', () => {
     const r = rig(), radius = r.controls.getDistance()
     const theta = r.controls.getAzimuthalAngle(), phi = r.controls.getPolarAngle()
-    expect(r.wheel({ deltaX: 15.5, deltaY: 8.25 }).defaultPrevented).toBe(true)
+    expect(r.wheel({ deltaX: 15.5, deltaY: 8.25, shiftKey: true }).defaultPrevented).toBe(true)
     r.step()
     expect(r.controls.getAzimuthalAngle()).toBeLessThan(theta)
     expect(r.controls.getPolarAngle()).toBeLessThan(phi)
     expect(r.controls.getDistance()).toBeCloseTo(radius, 10)
   })
 
-  it('keeps fast scrolling and momentum in orbit after a gentle trackpad start', () => {
+  it('keeps orbit stable across small and large Shift-scroll deltas', () => {
     const r = rig(), radius = r.controls.getDistance(), phi = r.controls.getPolarAngle()
-    r.wheel({ deltaY: 2, wheelDeltaY: -6 })
-    r.wheel({ deltaY: 100, wheelDeltaY: -120, timeStamp: 1016 })
-    r.wheel({ deltaY: 120, wheelDeltaY: -360, timeStamp: 1032 })
+    r.wheel({ deltaY: 2, shiftKey: true })
+    r.wheel({ deltaY: 100, shiftKey: true, timeStamp: 1016 })
+    r.wheel({ deltaY: 120, shiftKey: true, timeStamp: 1032 })
     r.step()
     expect(r.controls.getDistance()).toBeCloseTo(radius, 10)
     expect(r.controls.getPolarAngle()).toBeLessThan(phi)
@@ -68,29 +68,36 @@ describe('Trackpad, pinch and mouse-wheel controls', () => {
 
   it.each([
     { deltaMode: 0, deltaY: 100, wheelDeltaY: -120 },
-    { deltaMode: 0, deltaY: 4.25, wheelDeltaY: -120 },
+    { deltaMode: 0, deltaY: 4.25 },
+    { deltaMode: 0, deltaY: 2, deltaX: 0.25 },
     { deltaMode: 1, deltaY: 3 },
     { deltaMode: 2, deltaY: 1 },
   ])('zooms a mouse wheel without orbiting: %j', sample => {
     const r = rig(), radius = r.controls.getDistance(), theta = r.controls.getAzimuthalAngle(), phi = r.controls.getPolarAngle()
-    r.wheel(sample); r.step()
+    const event = r.wheel(sample); r.step()
+    expect(event.defaultPrevented).toBe(true)
     expect(r.controls.getDistance()).toBeGreaterThan(radius)
     expect(r.controls.getDistance()).toBeLessThanOrEqual(r.controls.maxDistance)
     expect(r.controls.getAzimuthalAngle()).toBeCloseTo(theta, 10)
     expect(r.controls.getPolarAngle()).toBeCloseTo(phi, 10)
+    r.controls.reset()
+    r.wheel({ ...sample, deltaY: -sample.deltaY }); r.step()
+    expect(r.controls.getDistance()).toBeLessThan(radius)
   })
 
-  it('recognizes switching from trackpad to a mouse between gestures', () => {
+  it('zooms immediately when Shift is released and discards pending orbit', () => {
     const r = rig(), radius = r.controls.getDistance()
-    r.wheel({ deltaY: 2 }); r.step()
-    r.wheel({ deltaY: 100, wheelDeltaY: -120, timeStamp: 2000 }); r.step()
+    const phi = r.controls.getPolarAngle()
+    r.wheel({ deltaY: 2, shiftKey: true })
+    r.wheel({ deltaY: 4, timeStamp: 1016 }); r.step()
     expect(r.controls.getDistance()).toBeGreaterThan(radius)
+    expect(r.controls.getPolarAngle()).toBeCloseTo(phi, 10)
   })
 
   it('routes ctrl-wheel pinch to zoom and cancels pending orbit', () => {
     const r = rig(), radius = r.controls.getDistance(), theta = r.controls.getAzimuthalAngle()
-    r.wheel({ deltaX: 20, deltaY: 10 })
-    r.wheel({ ctrlKey: true, deltaY: -2.5, timeStamp: 1016 }); r.step()
+    r.wheel({ deltaX: 20, deltaY: 10, shiftKey: true })
+    r.wheel({ ctrlKey: true, shiftKey: true, deltaY: -2.5, timeStamp: 1016 }); r.step()
     expect(r.controls.getDistance()).toBeLessThan(radius)
     expect(r.controls.getAzimuthalAngle()).toBeCloseTo(theta, 10)
   })
@@ -141,7 +148,7 @@ describe('Trackpad, pinch and mouse-wheel controls', () => {
 
   it('clears pending scroll on reset and removes gesture handlers on disposal', () => {
     const r = rig(), start = r.camera.position.clone()
-    r.wheel({ deltaX: 25, deltaY: 20 })
+    r.wheel({ deltaX: 25, deltaY: 20, shiftKey: true })
     r.gestures.reset(); r.controls.reset(); r.step()
     expect(r.camera.position.distanceTo(start)).toBeLessThan(1e-10)
     r.gestures.dispose()
@@ -152,7 +159,7 @@ describe('Trackpad, pinch and mouse-wheel controls', () => {
 
   it('filters scrolling consistently across render rates', () => {
     const a = rig(), b = rig()
-    a.wheel({ deltaX: 25, deltaY: 12 }); b.wheel({ deltaX: 25, deltaY: 12 })
+    a.wheel({ deltaX: 25, deltaY: 12, shiftKey: true }); b.wheel({ deltaX: 25, deltaY: 12, shiftKey: true })
     a.step(30, 1 / 30); b.step(144, 1 / 144)
     expect(a.camera.position.distanceTo(b.camera.position)).toBeLessThan(1e-6)
   })
