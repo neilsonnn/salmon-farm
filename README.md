@@ -1,1 +1,1 @@
-![salmon-farm](media/thumbnail.webp)
+![Salmon Farm screenshot](media/thumbnail.webp)
