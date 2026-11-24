@@ -17,6 +17,7 @@ import { MURKINESS } from './optics'
 import { FishPhysicsRunner } from './physicsRunner'
 import { shaderCompilationError, TanksSceneError, toTanksSceneError } from './errors'
 import { openingFieldOfView } from './opening'
+import { SceneGestures } from './gestures'
 
 interface SceneCallbacks { onReady: () => void; onError: (error: TanksSceneError) => void; onEnvironmentFallback: () => void }
 
@@ -29,6 +30,7 @@ export class TanksScene {
   private readonly camera = new PerspectiveCamera(40, 1, 0.1, 150)
   private readonly reflectionCamera = new PerspectiveCamera(40, 1, 0.1, 150)
   private readonly controls: OrbitControls
+  private readonly gestures: SceneGestures
   private readonly refraction = new WebGLRenderTarget(1, 1, { type: HalfFloatType, depthBuffer: true })
   private readonly reflection = new WebGLRenderTarget(1, 1, { type: HalfFloatType, depthBuffer: true })
   private readonly fish = createFishMesh(this.school)
@@ -110,6 +112,7 @@ export class TanksScene {
     this.controls.zoomSpeed = 0.65
     this.controls.update()
     this.controls.saveState()
+    this.gestures = new SceneGestures(this.controls, this.renderer.domElement)
     this.controls.addEventListener('change', this.invalidate)
     this.addLighting()
     this.addBottom()
@@ -134,6 +137,9 @@ export class TanksScene {
 
   async start() {
     try {
+      try { await this.physics.start() }
+      catch (error) { throw toTanksSceneError(error, 'simulation') }
+      if (this.disposed) return
       const [hdrResult, woodResult] = await Promise.allSettled([
         new HDRLoader().loadAsync(`${import.meta.env.BASE_URL}tanks/misty_pines_2k.hdr`), loadWoodTextures(),
       ])
@@ -170,7 +176,7 @@ export class TanksScene {
 
   setPaused(value: boolean) { this.paused = value; this.physics.suspend(value || document.hidden); this.accumulator = 0; this.lastFrame = performance.now(); this.dirty = true }
   setMurk(value: number) { this.water.material.uniforms.uMurk.value = Math.max(MURKINESS.min, Math.min(MURKINESS.max, value)); this.dirty = true }
-  resetView() { this.controls.reset(); this.dirty = true }
+  resetView() { this.gestures.reset(); this.controls.reset(); this.dirty = true }
   feed() {
     const point = this.lastWaterPoint ?? { x: 0.4, z: 1.5 }
     this.physics.disturb(point.x, point.z, 'food')
@@ -358,6 +364,7 @@ export class TanksScene {
 
   private onVisibility = () => {
     if (this.disposed || !this.initialized) return
+    if (document.hidden) this.gestures.reset()
     this.lastFrame = performance.now(); this.accumulator = 0
     this.physics.suspend(this.paused || document.hidden)
     this.renderer.setAnimationLoop(document.hidden ? null : this.frame)
@@ -367,6 +374,7 @@ export class TanksScene {
     if (this.disposed || document.hidden) return
     const elapsed = Math.min(0.075, Math.max(0, (now - this.lastFrame) / 1000))
     this.lastFrame = now
+    this.gestures.update(elapsed)
     const moved = this.controls.update()
     if (!this.paused) {
       this.accumulator += elapsed
@@ -439,6 +447,7 @@ export class TanksScene {
     this.renderer.setAnimationLoop(null)
     this.resizeObserver.disconnect()
     this.controls.removeEventListener('change', this.invalidate)
+    this.gestures.dispose()
     this.controls.dispose()
     document.removeEventListener('visibilitychange', this.onVisibility)
     const canvas = this.renderer.domElement
