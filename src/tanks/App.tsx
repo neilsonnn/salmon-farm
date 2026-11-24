@@ -92,6 +92,6 @@ export default function Tanks() {
     {DevControls && revealed && !error && <Suspense fallback={null}>
       <DevControls sceneRef={sceneRef} paused={paused} setPaused={setPaused} murk={murk} setMurk={setMurk} feed={feed} fallbackEnvironment={fallbackEnvironment} />
     </Suspense>}
-    <p className="sr-only">Drag, swipe with two fingers on a trackpad, or use a touch gesture to orbit. Pinch or use a mouse wheel to zoom. Tap the water to create a ripple. Space pauses or resumes, F scatters food, and R resets the view. Reduced motion starts the scene paused.</p>
+    <p className="sr-only">Drag with the left mouse button, swipe with two fingers on a trackpad, or use a touch gesture to orbit. Pinch, scroll the mouse wheel, or drag up or down with the right mouse button to zoom. Tap the water to create a ripple. Space pauses or resumes, F scatters food, and R resets the view. Reduced motion starts the scene paused.</p>
   </div>
 }

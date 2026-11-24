@@ -1,7 +1,7 @@
 import {
   ACESFilmicToneMapping, AmbientLight, BufferGeometry, Color, DataTexture, DepthTexture,
   DirectionalLight, EquirectangularReflectionMapping, Float32BufferAttribute, Group,
-  HalfFloatType, HemisphereLight, Matrix4, Mesh, MeshStandardMaterial, NoToneMapping,
+  HalfFloatType, HemisphereLight, Matrix4, Mesh, MeshStandardMaterial, MOUSE, NoToneMapping,
   Object3D, PCFSoftShadowMap, PerspectiveCamera, Plane, PlaneGeometry, PMREMGenerator,
   Points, Raycaster, RGBAFormat, Scene, ShaderMaterial, SRGBColorSpace, UnsignedByteType,
   UnsignedIntType, Vector2, Vector3, Vector4, WebGLRenderer, WebGLRenderTarget,
@@ -100,6 +100,7 @@ export class TanksScene {
     this.underwater.add(this.fish.mesh)
     this.camera.position.set(2.54, 8.37, 6.96)
     this.controls = new OrbitControls(this.camera, this.renderer.domElement)
+    this.controls.mouseButtons.RIGHT = MOUSE.DOLLY
     this.controls.target.set(-0.15, -0.25, 0)
     this.controls.enableDamping = true
     this.controls.dampingFactor = 0.065
