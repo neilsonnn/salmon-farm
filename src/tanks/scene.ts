@@ -318,9 +318,7 @@ export class TanksScene {
   private resize = () => {
     if (this.disposed) return
     const width = Math.max(1, this.host.clientWidth), height = Math.max(1, this.host.clientHeight)
-    // Limit actual pixel work, including both offscreen passes, on dense displays.
-    const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.65, Math.sqrt(2_800_000 / (width * height)))
-    this.setViewport(width, height, pixelRatio)
+    this.setViewport(width, height, window.devicePixelRatio || 1)
   }
 
   private setViewport(width: number, height: number, pixelRatio: number, updateStyle = true) {
@@ -329,9 +327,9 @@ export class TanksScene {
     this.camera.aspect = width / height
     this.camera.fov = openingFieldOfView(this.camera.aspect)
     this.camera.updateProjectionMatrix()
-    const scale = Math.min(1, 1650 / (width * pixelRatio))
-    this.refraction.setSize(Math.max(1, Math.round(width * pixelRatio * scale)), Math.max(1, Math.round(height * pixelRatio * scale)))
-    this.reflection.setSize(Math.max(1, Math.round(width * pixelRatio * 0.5)), Math.max(1, Math.round(height * pixelRatio * 0.5)))
+    const size = this.renderer.getDrawingBufferSize(new Vector2())
+    this.refraction.setSize(Math.max(1, size.x), Math.max(1, size.y))
+    this.reflection.setSize(Math.max(1, size.x), Math.max(1, size.y))
     this.water.material.uniforms.uResolution.value.set(this.refraction.width, this.refraction.height)
     this.dirty = true
   }

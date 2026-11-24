@@ -3,8 +3,7 @@ import {
   type Texture,
 } from 'three'
 import {
-  DIFFUSION_KERNEL, MAX_DIFFUSION_PIXELS, MAX_REFRACTION_PIXELS, MURKINESS,
-  REFRACTION_STRENGTH, SILT_DEPTH_GRADIENT, WATER_DIFFUSION, WATER_EXTINCTION,
+  MAX_REFRACTION_PIXELS, MURKINESS, REFRACTION_STRENGTH, SILT_DEPTH_GRADIENT, WATER_EXTINCTION,
 } from './optics'
 
 export const WATER_VERTEX = /* glsl */ `
@@ -48,8 +47,7 @@ export const WATER_FRAGMENT = /* glsl */ `
     return mix(mix(hash(i), hash(i + vec2(1, 0)), u.x), mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), u.x), u.y);
   }
   float linearDepth(float depth) { return uNear * uFar / (uFar - depth * (uFar - uNear)); }
-  // Each tap carries its own water column. A near fish must not lend its shallow
-  // attenuation to another, displaced silhouette in the diffusion footprint.
+  // Attenuate the water column at the refracted pixel without spatial diffusion.
   vec3 submergedSample(vec2 uv, float surfaceDepth, float verticalView, float density, vec3 scattering) {
     uv = clamp(uv, vec2(0.002), vec2(0.998));
     float depth = linearDepth(texture2D(uDepth, uv).x);
@@ -92,14 +90,10 @@ export const WATER_FRAGMENT = /* glsl */ `
     shift *= min(1.0, ${MAX_REFRACTION_PIXELS.toFixed(2)} / max(0.00001, length(shift)));
     vec2 refractionUv = clamp(screen + shift / uResolution, vec2(0.002), vec2(0.998));
     float verticalView = max(0.25, viewDirection.y);
-    float refractedDepth = linearDepth(texture2D(uDepth, refractionUv).x);
-    float thickness = clamp((refractedDepth - surfaceDepth) * verticalView, 0.025, 8.0);
-    vec2 diffusion = vec2(1.0) / uResolution * min(${MAX_DIFFUSION_PIXELS.toFixed(2)}, 0.35 + thickness * thickness * uMurk * ${WATER_DIFFUSION.toFixed(2)});
     float sediment = noise(vWorld.xz * 0.29 + uTime * 0.009) * 0.65 + noise(vWorld.xz * 0.71) * 0.35;
     float density = uMurk * (0.85 + sediment * 0.4);
     vec3 scattering = mix(vec3(0.033, 0.043, 0.035), vec3(0.073, 0.081, 0.064), sediment);
-    vec3 transmitted = vec3(0.0);
-    ${DIFFUSION_KERNEL.map(tap => `transmitted += submergedSample(refractionUv + diffusion * vec2(${tap.x.toFixed(1)}, ${tap.y.toFixed(1)}), surfaceDepth, verticalView, density, scattering) * ${tap.weight.toFixed(4)};`).join('\n    ')}
+    vec3 transmitted = submergedSample(refractionUv, surfaceDepth, verticalView, density, scattering);
     vec3 reflectedRay = reflect(-viewDirection, normal);
     vec3 environment = texture2D(uEnvironment, environmentUv(reflectedRay)).rgb;
     vec2 reflectionUv = vReflection.xy / vReflection.w * 0.5 + 0.5;
