@@ -34,7 +34,7 @@ function observe(mode) {
   window.addEventListener('unhandledrejection', event => errors.push(String(event.reason)))
   let started = 0, frames = 0, resumed = false
   const tick = now => {
-    if (document.querySelector('.tanks-page[aria-busy="false"]')) {
+    if (!document.querySelector('[role="alert"]') && document.querySelector('.tanks-page[aria-busy="false"]')) {
       if (!started) started = now
       frames++
       if (!resumed && matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -47,7 +47,7 @@ function observe(mode) {
   requestAnimationFrame(tick)
   setInterval(() => {
     const alert = document.querySelector('[role="alert"]')?.textContent || ''
-    const running = !!document.querySelector('.tanks-page[aria-busy="false"]')
+    const running = !alert && !!document.querySelector('.tanks-page[aria-busy="false"]')
     const fps = started ? Math.round(frames * 1000 / Math.max(1, performance.now() - started)) : 0
     const passed = mode === 'blocked' ? !!alert && !running
       : running && workers.length === 2 && workers.every(worker => worker.scheme === 'blob' && worker.ready && worker.updates >= 3) && bundleFetches.length === 1 && errors.length === 0
