@@ -137,9 +137,6 @@ export class TanksScene {
 
   async start() {
     try {
-      try { await this.physics.start() }
-      catch (error) { throw toTanksSceneError(error, 'simulation') }
-      if (this.disposed) return
       const [hdrResult, woodResult] = await Promise.allSettled([
         new HDRLoader().loadAsync(`${import.meta.env.BASE_URL}tanks/misty_pines_2k.hdr`), loadWoodTextures(),
       ])

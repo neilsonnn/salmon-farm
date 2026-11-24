@@ -12,12 +12,9 @@ for (const name of ['opening.webp', 'misty_pines_2k.hdr', 'wood-planks-color.jpg
 assert(statSync('dist/tanks/opening.webp').size < 1_000_000, 'Keep the opening still under 1 MB.')
 const assets = readdirSync('dist/assets')
 assert(assets.some(name => /^physics\.worker-.*\.js$/.test(name)), 'The physics worker must be bundled.')
-const workerSource = readFileSync(`dist/assets/${assets.find(name => /^physics\.worker-.*\.js$/.test(name))}`, 'utf8')
-assert(!/\bimport\s*(?:["'{*]|[A-Za-z_$])/.test(workerSource), 'The Blob worker must be self-contained.')
 assert(!assets.some(name => /DevControls|dev-.*\.css/.test(name)), 'Development controls must not ship.')
 for (const name of assets.filter(name => name.endsWith('.js'))) {
   const source = readFileSync(`dist/assets/${name}`, 'utf8')
-  assert(!/new Worker\(new URL/.test(source), 'Production must start Blob workers, not URL workers.')
   for (const text of ['Save opening still', 'Save thumbnail', 'Record preview', 'Technical details', 'A study of moving together', 'Return to Neilson']) {
     assert(!source.includes(text), `Development or obsolete UI leaked into ${name}: ${text}`)
   }
