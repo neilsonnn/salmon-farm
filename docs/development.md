@@ -8,6 +8,8 @@ Trackpad scrolling changes camera angles while preserving distance. Pinch works 
 
 The small Debug disclosure exists only in development. It contains pause, feed, reset, murkiness, and local scene-export controls. Its module and stylesheet are excluded from production. Error diagnostics appear there only in development; production retains a concise error and Retry control if rendering fails.
 
+The canvas uses the display's native device pixel ratio. Refraction and reflection targets match its full drawing-buffer resolution. Underwater color is sampled once with depth-based absorption and scattering; there is no diffusion blur or camera depth-of-field effect.
+
 The initial HTML preloads the HDR as a CORS fetch and all three wood maps as CORS images, matching Three.js loader requests. Downloads start while JavaScript loads and the procedural scene is constructed. The environment is a 512×256 RGBE HDR with its dynamic range preserved; wood maps are 512×512 WebP. The opening still retains its 2880×960 resolution. The build enforces a 2 MB runtime budget and individual texture budgets.
 
 To regenerate these derivatives from the original assets, install `cwebp` and run `node scripts/optimize-assets.mjs 7b9b8d2`. The script reads the original files from Git, filters the environment in linear radiance with spherical area weights, checks the RGBE round-trip error, and encodes the images. It always uses original inputs to avoid cumulative recompression.
