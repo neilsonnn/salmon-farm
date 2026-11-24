@@ -92,9 +92,9 @@ export function createNets() {
 export async function loadWoodTextures() {
   const loader = new TextureLoader()
   const textures = await Promise.allSettled([
-    loader.loadAsync(`${import.meta.env.BASE_URL}tanks/wood-planks-color.jpg`),
-    loader.loadAsync(`${import.meta.env.BASE_URL}tanks/wood-planks-normal.jpg`),
-    loader.loadAsync(`${import.meta.env.BASE_URL}tanks/wood-planks-roughness.jpg`),
+    loader.loadAsync(`${import.meta.env.BASE_URL}tanks/wood-planks-color.webp`),
+    loader.loadAsync(`${import.meta.env.BASE_URL}tanks/wood-planks-normal.webp`),
+    loader.loadAsync(`${import.meta.env.BASE_URL}tanks/wood-planks-roughness.webp`),
   ])
   const [map, normalMap, roughnessMap] = textures.map(result => result.status === 'fulfilled' ? result.value : null)
   if (map) map.colorSpace = SRGBColorSpace

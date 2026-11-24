@@ -1,10 +1,12 @@
 Tanks environment and surface assets
 
-Misty Pines HDRI (2K) — Greg Zaal, Poly Haven
+Misty Pines HDRI — Greg Zaal, Poly Haven
+Served as a 512×256 RGBE derivative, filtered in linear radiance from the 2K source.
 https://polyhaven.com/a/misty_pines
 https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/misty_pines_2k.hdr
 
-Wood Planks Grey (1K color, OpenGL normal, roughness) — Rob Tuytel, Poly Haven
+Wood Planks Grey — Rob Tuytel, Poly Haven
+Served as 512×512 WebP color, OpenGL normal and roughness derivatives of the 1K sources.
 https://polyhaven.com/a/wood_planks_grey
 https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/wood_planks_grey/
 

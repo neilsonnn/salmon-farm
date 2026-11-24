@@ -138,7 +138,7 @@ export class TanksScene {
   async start() {
     try {
       const [hdrResult, woodResult] = await Promise.allSettled([
-        new HDRLoader().loadAsync(`${import.meta.env.BASE_URL}tanks/misty_pines_2k.hdr`), loadWoodTextures(),
+        new HDRLoader().loadAsync(`${import.meta.env.BASE_URL}tanks/misty-pines-512.hdr`), loadWoodTextures(),
       ])
       if (this.disposed) {
         if (hdrResult.status === 'fulfilled') hdrResult.value.dispose()
