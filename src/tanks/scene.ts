@@ -98,7 +98,7 @@ export class TanksScene {
     this.water = createWater(this.refraction.texture, this.refraction.depthTexture, this.reflection.texture, this.environment)
     this.scene.add(this.water.mesh, this.underwater)
     this.underwater.add(this.fish.mesh)
-    this.camera.position.set(2.54, 8.37, 6.96)
+    this.camera.position.set(2.06, 6.82, 5.71)
     this.controls = new OrbitControls(this.camera, this.renderer.domElement)
     this.controls.mouseButtons.RIGHT = MOUSE.DOLLY
     this.controls.target.set(-0.15, -0.25, 0)
