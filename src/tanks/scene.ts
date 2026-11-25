@@ -3,7 +3,7 @@ import {
   DirectionalLight, EquirectangularReflectionMapping, Float32BufferAttribute, Group,
   HalfFloatType, HemisphereLight, Matrix4, Mesh, MeshStandardMaterial, MOUSE, NoToneMapping,
   Object3D, PCFSoftShadowMap, PerspectiveCamera, Plane, PlaneGeometry, PMREMGenerator,
-  Points, Raycaster, RGBAFormat, Scene, ShaderMaterial, SRGBColorSpace, UnsignedByteType,
+  Points, Raycaster, RGBAFormat, Scene, ShaderMaterial, SRGBColorSpace, TOUCH, UnsignedByteType,
   UnsignedIntType, Vector2, Vector3, Vector4, WebGLRenderer, WebGLRenderTarget,
   type Material, type Texture,
 } from 'three'
@@ -59,7 +59,7 @@ export class TanksScene {
   private initialized = false
   private ready = false
   private paused: boolean
-  private pointerDown = { x: 0, y: 0, time: 0 }
+  private pointerDown: { id: number; x: number; y: number; time: number } | null = null
   private lastWaterPoint: { x: number; z: number } | null = null
 
   constructor(private host: HTMLElement, private callbacks: SceneCallbacks, paused: boolean) {
@@ -101,6 +101,7 @@ export class TanksScene {
     this.camera.position.set(1.88, 6.25, 5.25)
     this.controls = new OrbitControls(this.camera, this.renderer.domElement)
     this.controls.mouseButtons.RIGHT = MOUSE.ROTATE
+    this.controls.touches.TWO = TOUCH.DOLLY_ROTATE
     this.controls.target.set(-0.15, -0.25, 0)
     this.controls.enableDamping = true
     this.controls.dampingFactor = 0.065
@@ -336,12 +337,16 @@ export class TanksScene {
   }
 
   private onPointerDown = (event: PointerEvent) => {
-    this.pointerDown = { x: event.clientX, y: event.clientY, time: performance.now() }
+    this.pointerDown = event.button === 0 && !this.gestures.hasMultipleTouches
+      ? { id: event.pointerId, x: event.clientX, y: event.clientY, time: performance.now() } : null
   }
 
   private onPointerUp = (event: PointerEvent) => {
-    if (event.button !== 0 || performance.now() - this.pointerDown.time > 450
-      || Math.hypot(event.clientX - this.pointerDown.x, event.clientY - this.pointerDown.y) > 7) return
+    const start = this.pointerDown
+    if (!start || start.id !== event.pointerId) return
+    this.pointerDown = null
+    if (event.button !== 0 || performance.now() - start.time > 450
+      || Math.hypot(event.clientX - start.x, event.clientY - start.y) > 7) return
     const rect = this.renderer.domElement.getBoundingClientRect()
     this.pointer.set((event.clientX - rect.left) / rect.width * 2 - 1, -(event.clientY - rect.top) / rect.height * 2 + 1)
     this.raycaster.setFromCamera(this.pointer, this.camera)
@@ -360,7 +365,7 @@ export class TanksScene {
 
   private onVisibility = () => {
     if (this.disposed || !this.initialized) return
-    if (document.hidden) this.gestures.reset()
+    if (document.hidden) { this.gestures.reset(); this.pointerDown = null }
     this.lastFrame = performance.now(); this.accumulator = 0
     this.physics.suspend(this.paused || document.hidden)
     this.renderer.setAnimationLoop(document.hidden ? null : this.frame)

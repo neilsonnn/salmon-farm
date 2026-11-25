@@ -26,9 +26,11 @@ export class SceneGestures {
     element.addEventListener('pointerdown', this.onPointerDown, true)
     element.addEventListener('pointerup', this.onPointerUp, true)
     element.addEventListener('pointercancel', this.onPointerUp, true)
+    element.addEventListener('lostpointercapture', this.onPointerUp, true)
   }
 
   private consume(event: Event) { event.preventDefault(); event.stopImmediatePropagation() }
+  get hasMultipleTouches() { return this.touches.size > 1 }
   private clearOrbit() { this.pendingTheta = 0; this.pendingPhi = 0 }
 
   private onWheel = (event: WheelEvent) => {
@@ -129,5 +131,6 @@ export class SceneGestures {
     this.element.removeEventListener('pointerdown', this.onPointerDown, true)
     this.element.removeEventListener('pointerup', this.onPointerUp, true)
     this.element.removeEventListener('pointercancel', this.onPointerUp, true)
+    this.element.removeEventListener('lostpointercapture', this.onPointerUp, true)
   }
 }
